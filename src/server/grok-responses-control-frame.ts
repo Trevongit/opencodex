@@ -3,6 +3,8 @@ import { replaceSseDataPayload, splitSseBlock, sseDataPayload, type SseBlockRewr
 const GROK_CONTROL_FRAME_TYPES: Record<string, true> = {
   "codex.rate_limits": true,
   "codex.response.metadata": true,
+  // HTTP Responses name. Grok Build 1.0.52 has no decoder variant for it.
+  "response.metadata": true,
 };
 
 const GROK_RESPONSE_INTEGER_TIMESTAMP_FIELDS = ["created_at", "completed_at"] as const;
@@ -133,7 +135,8 @@ function rewriteIntegralTimestamp(payload: string, field: string, value: number,
 }
 
 /**
- * Hide Codex-only control frames from Grok's strict Responses decoder.
+ * Hide Codex-only control frames, including HTTP `response.metadata`, from
+ * Grok's strict Responses decoder.
  *
  * The inspection branch still sees these frames before this client-facing
  * rewrite, so quota accounting and response metadata remain available to the

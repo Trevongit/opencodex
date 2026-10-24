@@ -74,6 +74,7 @@ const GROK_CONTROL_FRAME_EVENTS = [
     rate_limits: { primary: { used_percent: 12, window_minutes: 60, reset_at: 123 } },
   },
   { type: "codex.response.metadata", headers: { "x-models-etag": "fixture" } },
+  { type: "response.metadata", metadata: { type: "other", turn: 1 } },
   { type: "response.created", response: { id: "resp_control" } },
   { type: "response.completed", response: { id: "resp_control", status: "completed", output: [] } },
 ];
@@ -133,7 +134,7 @@ afterEach(async () => {
   removeTreeWithRetry(TEST_DIR);
 });
 
-for (const controlType of ["codex.rate_limits", "codex.response.metadata"]) {
+for (const controlType of ["codex.rate_limits", "codex.response.metadata", "response.metadata"]) {
   describe(`Grok control frame ${controlType}`, () => {
     test.each(["{}", "not-json"])("filters an event-only discriminator with payload %s", payload => {
       const rewrite = createGrokResponsesControlFrameBlockRewrite();
@@ -504,6 +505,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
       const grokText = await grokResponse.text();
       expect(grokText).not.toContain("codex.rate_limits");
       expect(grokText).not.toContain("codex.response.metadata");
+      expect(grokText).not.toContain('"type":"response.metadata"');
       expect(grokText).toContain('"type":"response.completed"');
       expect(grokText).toContain('"created_at":1789740485}');
 
@@ -512,6 +514,7 @@ describe("responsesSnapshotRepair through /v1/responses", () => {
       const ordinaryText = await ordinaryResponse.text();
       expect(ordinaryText).toContain("codex.rate_limits");
       expect(ordinaryText).toContain("codex.response.metadata");
+      expect(ordinaryText).toContain('"type":"response.metadata"');
       expect(ordinaryText).toContain('"created_at":1789740485.0}');
     } finally {
       await server.stop(true);
